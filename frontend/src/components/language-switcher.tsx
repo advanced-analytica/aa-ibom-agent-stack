@@ -32,13 +32,15 @@ function buildLocalizedPath(pathname: string, newLocale: Locale): string {
 }
 
 /**
- * Default language switcher — segmented pills (EN | PL).
- * Used in the dashboard footer / settings, where space allows two buttons.
+ * Default language switcher — segmented pills for configured locales.
+ * Used in the dashboard footer / settings when more than one locale is enabled.
  */
 export function LanguageSwitcher() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+
+  if (locales.length <= 1) return null;
 
   const handleChange = (newLocale: Locale) => {
     router.push(buildLocalizedPath(pathname, newLocale));
@@ -98,6 +100,8 @@ export function LanguageSwitcherCompact() {
     router.push(buildLocalizedPath(pathname, newLocale));
     setOpen(false);
   };
+
+  if (locales.length <= 1) return null;
 
   return (
     <div ref={wrapperRef} className="relative">
@@ -179,6 +183,8 @@ export function LanguageSwitcherIcon() {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
+
+  if (locales.length <= 1) return null;
 
   const handleChange = (newLocale: Locale) => {
     router.push(buildLocalizedPath(pathname, newLocale));

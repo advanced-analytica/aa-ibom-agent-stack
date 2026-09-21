@@ -45,6 +45,7 @@ export function ChatInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const ignoreSpeechResultsRef = useRef(false);
 
   const showPalette = !!slashContext && message.startsWith("/") && !message.includes("\n");
   const allCommands = commands ?? BUILTIN_COMMANDS;
@@ -81,6 +82,9 @@ export function ChatInput({
       // through the normal flow so it lands as a regular user turn.
       const fileIds = attachedFiles.length > 0 ? attachedFiles.map((f) => f.id) : undefined;
       const files = attachedFiles.length > 0 ? attachedFiles : undefined;
+      ignoreSpeechResultsRef.current = true;
+      recognitionRef.current?.abort();
+      setIsListening(false);
       onSend(cmd.action.replaceWith, fileIds, files);
       setMessage("");
       setAttachedFiles([]);
@@ -100,6 +104,9 @@ export function ChatInput({
 
     const fileIds = attachedFiles.length > 0 ? attachedFiles.map((f) => f.id) : undefined;
     const files = attachedFiles.length > 0 ? attachedFiles : undefined;
+    ignoreSpeechResultsRef.current = true;
+    recognitionRef.current?.abort();
+    setIsListening(false);
     onSend(trimmed || "Analyze the attached file(s)", fileIds, files);
     setMessage("");
     setAttachedFiles([]);
@@ -180,6 +187,7 @@ export function ChatInput({
     let wasAborted = false;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
+      if (ignoreSpeechResultsRef.current) return;
       let interim = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
@@ -198,10 +206,20 @@ export function ChatInput({
     recognition.onend = () => {
       recognitionRef.current = null;
       setIsListening(false);
+      if (ignoreSpeechResultsRef.current) {
+        ignoreSpeechResultsRef.current = false;
+        return;
+      }
       setMessage((prev) => prev.replace(/\u200B/g, ""));
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      if (ignoreSpeechResultsRef.current) {
+        recognitionRef.current = null;
+        setIsListening(false);
+        ignoreSpeechResultsRef.current = false;
+        return;
+      }
       wasAborted = event.error === "aborted";
       recognitionRef.current = null;
       setIsListening(false);
@@ -224,6 +242,7 @@ export function ChatInput({
 
     recognitionRef.current = recognition;
     finalTranscript = message;
+    ignoreSpeechResultsRef.current = false;
     try {
       recognition.start();
       setIsListening(true);

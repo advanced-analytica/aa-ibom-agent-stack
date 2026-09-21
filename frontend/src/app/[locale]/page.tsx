@@ -267,7 +267,7 @@ export default async function HomePage() {
               eyebrow="AI Chat"
               title={
                 <>
-                  Answers grounded in <em>your own work.</em>
+                  Answers grounded in <em>your business.</em>
                 </>
               }
               description="Ask questions in plain English and get answers with citations. Your assistant remembers context and adapts as your work evolves."
@@ -342,7 +342,7 @@ export default async function HomePage() {
             </h2>
             <p className="text-foreground/70 mt-5 max-w-xl text-lg leading-relaxed">
               Source documents, conversations, and cloud files are continuously indexed. Every
-              answer is grounded in your own work — with citations back to the source.
+              answer is grounded in your business — with citations back to the source.
             </p>
           </div>
           <Reveal>

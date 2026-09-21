@@ -63,46 +63,6 @@ export const TEASER_PLANS: TeaserPlan[] = [
   },
 ];
 
-/** Polish translations of the same plans. Returned by helpers when locale=pl. */
-export const TEASER_PLANS_PL: TeaserPlan[] = [
-  {
-    name: "Starter",
-    price: "0 zł",
-    cadence: "/ miesiąc",
-    description: "Dla osób eksplorujących produkt.",
-    features: ["100 wiadomości / dzień", "1 podpięte źródło danych", "Wsparcie społeczności"],
-    cta: { label: "Zacznij za darmo", href: ROUTES.REGISTER },
-  },
-  {
-    name: "Pro",
-    price: "129 zł",
-    cadence: "/ user / miesiąc",
-    description: "Dla małych zespołów robiących prawdziwą robotę.",
-    features: [
-      "Bez limitu wiadomości",
-      "10 podpiętych źródeł",
-      "Wsparcie email + czat",
-      "Automatyzacje workflow",
-    ],
-    cta: { label: "Zacznij 14-dniowy trial", href: ROUTES.REGISTER },
-    featured: true,
-    badge: "Najpopularniejszy",
-  },
-  {
-    name: "Business",
-    price: "399 zł",
-    cadence: "/ user / miesiąc",
-    description: "Dla organizacji wdrażających rozwiązanie szeroko.",
-    features: [
-      "Wszystko z Pro",
-      "SSO + audit log",
-      "Role-based access control",
-      "Dedykowany success manager",
-    ],
-    cta: { label: "Pogadaj ze sprzedażą", href: ROUTES.CONTACT },
-  },
-];
-
-export function getTeaserPlans(locale: string): TeaserPlan[] {
-  return locale === "pl" ? TEASER_PLANS_PL : TEASER_PLANS;
+export function getTeaserPlans(_locale: string): TeaserPlan[] {
+  return TEASER_PLANS;
 }

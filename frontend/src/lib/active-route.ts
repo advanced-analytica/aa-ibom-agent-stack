@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 
 import { locales } from "@/i18n";
 
-/** Strip a leading locale segment (e.g. `/pl/chat` → `/chat`, `/dashboard` → `/dashboard`). */
+/** Strip a leading locale segment (e.g. `/es/chat` → `/chat`, `/dashboard` → `/dashboard`). */
 export function stripLocale(pathname: string): string {
   const seg = pathname.split("/")[1];
   if (seg && (locales as readonly string[]).includes(seg)) {
