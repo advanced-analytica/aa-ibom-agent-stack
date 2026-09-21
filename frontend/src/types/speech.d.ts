@@ -25,10 +25,24 @@ interface SpeechRecognition extends EventTarget {
   lang: string;
   onresult: ((event: SpeechRecognitionEvent) => void) | null;
   onend: (() => void) | null;
-  onerror: ((event: Event) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
   start(): void;
   stop(): void;
   abort(): void;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  readonly error:
+    | "aborted"
+    | "audio-capture"
+    | "bad-grammar"
+    | "language-not-supported"
+    | "network"
+    | "no-speech"
+    | "not-allowed"
+    | "phrases-not-supported"
+    | "service-not-allowed";
+  readonly message?: string;
 }
 
 interface SpeechRecognitionConstructor {

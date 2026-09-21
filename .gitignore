@@ -95,6 +95,7 @@ logs/
 
 # Docker
 .docker/
+nginx/ssl/
 
 # OS
 .DS_Store

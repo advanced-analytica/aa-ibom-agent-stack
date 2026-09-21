@@ -59,9 +59,7 @@ export const metadata: Metadata = {
     googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
   },
   icons: {
-    // /icon.tsx + /apple-icon.tsx render PNGs via next/og — declare them as PNG
-    // so browsers don't reject the response on a Content-Type mismatch.
-    icon: [{ url: "/icon", sizes: "32x32", type: "image/png" }],
+    icon: [{ url: "/images/brand/brando-avatar.svg", type: "image/svg+xml" }],
     apple: [{ url: "/apple-icon", sizes: "180x180", type: "image/png" }],
   },
   manifest: "/manifest.webmanifest",

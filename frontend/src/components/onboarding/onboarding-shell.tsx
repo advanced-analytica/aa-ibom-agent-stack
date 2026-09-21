@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Check } from "lucide-react";
 
+import { BrandoMark } from "@/components/brand/brando-mark";
 import { Progress } from "@/components/ui";
 import { APP_NAME, ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -60,7 +61,7 @@ export function OnboardingShell({
             href={ROUTES.HOME}
             className="text-foreground inline-flex items-center gap-2 text-base font-semibold tracking-tight"
           >
-            <span aria-hidden className="bg-brand inline-block h-2.5 w-2.5 rounded-full" />
+            <BrandoMark />
             {APP_NAME}
           </Link>
           {!hideSkip && (

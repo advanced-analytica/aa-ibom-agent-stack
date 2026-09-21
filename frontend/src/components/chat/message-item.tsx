@@ -1,14 +1,15 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { BrandoMark } from "@/components/brand/brando-mark";
 import type { ChatMessage, ChatMessageFile } from "@/types";
 import { ToolCallCard } from "./tool-call-card";
 import { MarkdownContent } from "./markdown-content";
 import { CopyButton } from "./copy-button";
 import { RatingButtons } from "./rating-buttons";
-import { useChatStore, useFilePreviewStore } from "@/stores";
+import { useChatStore, useConversationStore, useFilePreviewStore } from "@/stores";
 import { useSourcesPanelStore } from "@/stores/sources-panel-store";
-import { Bot, FileText, Globe, Paperclip, RefreshCw, User } from "lucide-react";
+import { FileText, Globe, Paperclip, RefreshCw, User } from "lucide-react";
 import Image from "next/image";
 import { useAuthStore } from "@/stores";
 import { getFileUrl } from "@/lib/file-api";
@@ -119,6 +120,10 @@ export function MessageItem({ message, groupPosition, onRegenerate }: MessageIte
   const openPreview = useFilePreviewStore((s) => s.open);
   const openSources = useSourcesPanelStore((s) => s.open);
   const { user: authUser, avatarVersion } = useAuthStore();
+  const activeConversationId = useConversationStore((state) => state.currentConversationId);
+  const ratingConversationId = message.isTemporaryId
+    ? ""
+    : (message.conversationId ?? activeConversationId ?? "");
   const isGrouped = groupPosition && groupPosition !== "single";
 
   const sources = !isUser ? extractSources(message) : [];
@@ -187,7 +192,7 @@ export function MessageItem({ message, groupPosition, onRegenerate }: MessageIte
         ) : isUser ? (
           <User className="h-4 w-4" />
         ) : (
-          <Bot className="h-4 w-4 sm:h-5 sm:w-5" />
+          <BrandoMark className="h-full w-full rounded-full" />
         )}
       </div>
       <div
@@ -374,7 +379,7 @@ export function MessageItem({ message, groupPosition, onRegenerate }: MessageIte
             {!isUser && (
               <RatingButtons
                 messageId={message.id}
-                conversationId={message.conversationId ?? ""}
+                conversationId={ratingConversationId}
                 currentRating={message.user_rating ?? null}
                 ratingCount={message.rating_count ?? undefined}
                 isAssistant={!isUser}

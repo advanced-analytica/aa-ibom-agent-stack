@@ -136,7 +136,7 @@ export function ChatInput({
     }
   };
 
-  const toggleMic = useCallback(() => {
+  const toggleMic = useCallback(async () => {
     if (isListening) {
       recognitionRef.current?.stop();
       setIsListening(false);
@@ -149,12 +149,35 @@ export function ChatInput({
       return;
     }
 
+    let micPreflightSucceeded = false;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micPreflightSucceeded = true;
+      stream.getTracks().forEach((track) => track.stop());
+    } catch (err) {
+      setIsListening(false);
+      const errorName = err instanceof DOMException ? err.name : "";
+      if (errorName === "NotAllowedError" || errorName === "PermissionDeniedError") {
+        toast.error(
+          "Chrome or macOS is blocking microphone input. Reset the site permission, then check System Settings > Privacy & Security > Microphone for Chrome.",
+        );
+        return;
+      }
+      if (errorName === "NotFoundError" || errorName === "DevicesNotFoundError") {
+        toast.error("No microphone was found. Check your Mac input device settings.");
+        return;
+      }
+      toast.error(getErrorMessage(err, "Could not access the microphone"));
+      return;
+    }
+
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = navigator.language || "en-US";
 
     let finalTranscript = "";
+    let wasAborted = false;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let interim = "";
@@ -173,19 +196,42 @@ export function ChatInput({
     };
 
     recognition.onend = () => {
+      recognitionRef.current = null;
       setIsListening(false);
       setMessage((prev) => prev.replace(/\u200B/g, ""));
     };
 
-    recognition.onerror = () => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      wasAborted = event.error === "aborted";
+      recognitionRef.current = null;
       setIsListening(false);
-      toast.error("Speech recognition error");
+      if (wasAborted) return;
+
+      const messageByError: Partial<Record<SpeechRecognitionErrorEvent["error"], string>> = {
+        "audio-capture":
+          "No microphone was found. Check your Mac and Chrome microphone settings.",
+        "language-not-supported": "Speech recognition does not support this language.",
+        network: "Speech recognition could not reach Chrome's speech service. Try again shortly.",
+        "no-speech": "I didn't catch any speech. Try again and speak after the mic activates.",
+        "not-allowed": micPreflightSucceeded
+          ? "Chrome allowed the mic but blocked speech recognition. Reset the site permission or try the app over HTTPS."
+          : "Microphone access is blocked. Allow microphone access for this site.",
+        "service-not-allowed":
+          "Chrome blocked the speech recognition service. Check site permissions and try again.",
+      };
+      toast.error(messageByError[event.error] ?? `Speech recognition error: ${event.error}`);
     };
 
     recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
     finalTranscript = message;
+    try {
+      recognition.start();
+      setIsListening(true);
+    } catch (err) {
+      recognitionRef.current = null;
+      setIsListening(false);
+      toast.error(getErrorMessage(err, "Could not start speech recognition"));
+    }
   }, [isListening, message]);
 
   // File upload to backend — shared by the file picker and drag-and-drop.

@@ -1,4 +1,4 @@
-export const APP_NAME = "ibom_ai_agent_stack";
+export const APP_NAME = "Brando";
 export const APP_DESCRIPTION = "A FastAPI project";
 
 export const API_ROUTES = {

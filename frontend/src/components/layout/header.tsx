@@ -16,12 +16,12 @@ import {
   Search,
   Settings,
   ShieldCheck,
-  Sparkles,
   Star,
   Users,
   UserCircle,
   type LucideIcon,
 } from "lucide-react";
+import { BrandoMark } from "@/components/brand/brando-mark";
 import { LanguageSwitcherIcon } from "@/components/language-switcher";
 import { ThemeToggle } from "@/components/theme";
 import {
@@ -128,12 +128,7 @@ export function Header() {
             href={ROUTES.DASHBOARD}
             className="flex items-center gap-2 pr-1 text-sm font-bold tracking-tight sm:text-base"
           >
-            <span
-              aria-hidden
-              className="bg-foreground text-background inline-flex h-6 w-6 items-center justify-center rounded-md"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-            </span>
+            <BrandoMark />
             <span className="hidden sm:inline">{APP_NAME}</span>
           </Link>
 

@@ -192,13 +192,12 @@ async def list_messages(
     limit: int = Query(100, ge=1, le=500),
 ) -> Any:
     """List messages in a conversation."""
-    uid = None if current_user.has_role(UserRole.ADMIN) else current_user.id
     items, total = await conversation_service.list_messages(
         conversation_id,
         skip=skip,
         limit=limit,
         include_tool_calls=True,
-        user_id=uid,
+        user_id=current_user.id,
     )
     return MessageList(items=items, total=total)  # ty: ignore[invalid-argument-type]
 

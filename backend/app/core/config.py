@@ -128,10 +128,10 @@ class Settings(BaseSettings):
     # Public URL of the frontend; used to build OAuth redirect targets and
     # Stripe checkout/portal return URLs. Always declared (not gated) because
     # the billing model_validator references it unconditionally.
-    FRONTEND_URL: str = "http://localhost:3000"
+    FRONTEND_URL: str = "https://localhost:3000"
     GOOGLE_OAUTH_CLIENT_ID: str = ""
     GOOGLE_OAUTH_CLIENT_SECRET: str = ""
-    GOOGLE_OAUTH_REDIRECT_URI: str = "http://localhost:3000/auth/callback"
+    GOOGLE_OAUTH_REDIRECT_URI: str = "https://localhost:3000/auth/callback"
     SUPABASE_URL: str = ""
     SUPABASE_ANON_KEY: str = ""
 
@@ -224,6 +224,8 @@ class Settings(BaseSettings):
     RAG_ENABLE_OCR: bool = False  # OCR fallback for scanned PDFs (requires tesseract)
 
     CORS_ORIGINS: list[str] = [
+        "https://localhost:3000",
+        "http://localhost:3001",
         "http://localhost:3000",
         "http://localhost:8080",
     ]

@@ -121,12 +121,22 @@ export function useChat(options: UseChatOptions = {}) {
 
         case "message_saved": {
           // Assistant message was saved to database, update local ID to real database ID
-          const { message_id } = wsEvent.data as { message_id: string };
+          const { message_id, conversation_id } = wsEvent.data as {
+            message_id: string;
+            conversation_id?: string | null;
+          };
+          const savedConversationId =
+            conversation_id ||
+            useConversationStore.getState().currentConversationId ||
+            currentConversationIdFromStore ||
+            conversationId ||
+            undefined;
           if (currentMessageIdRef.current) {
             // Update the current streaming message's ID to the real database ID
             updateMessage(currentMessageIdRef.current, (msg) => ({
               ...msg,
               id: message_id,
+              conversationId: msg.conversationId ?? savedConversationId,
               isTemporaryId: false,
             }));
           } else {
@@ -140,6 +150,7 @@ export function useChat(options: UseChatOptions = {}) {
               updateMessage(lastTemp.id, (msg) => ({
                 ...msg,
                 id: message_id,
+                conversationId: msg.conversationId ?? savedConversationId,
                 isTemporaryId: false,
               }));
             }

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 
+import { BrandoMark } from "@/components/brand/brando-mark";
 import { APP_NAME, ROUTES } from "@/lib/constants";
 
 const HIGHLIGHTS = [
@@ -18,7 +19,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             href={ROUTES.HOME}
             className="font-display text-foreground inline-flex items-center gap-2 text-base font-bold tracking-tight"
           >
-            <span aria-hidden className="bg-brand inline-block h-2.5 w-2.5 rounded-full" />
+            <BrandoMark />
             {APP_NAME}
           </Link>
         </header>
