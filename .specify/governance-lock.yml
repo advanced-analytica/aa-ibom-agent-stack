@@ -1,0 +1,20 @@
+constitution:
+  version: "4.7.1"
+  sha256: "sha256:b8b224cb6377ea80236bc6e9008a82d1341ace05da516d40c18ee8a83a5a4577"
+  source_release: "aa-stack-constitution-v4.7.1"
+client_overlay:
+  client_id: "advanced-analytica"
+  version: "ibom-agent-stack-source-brief-2026-09-21"
+  sha256: "sha256:187177e8225305276adf1a51c1ac19717562a00183824556d4ef9d4210b9dc0b"
+preset:
+  id: "aa-stack-governance"
+  version: "1.5.0"
+repositories:
+  current: "aa-ibom-agent-stack"
+  permitted:
+    - "aa-ibom-agent-stack"
+    - "aa-ibom-pydantic-deepagents"
+    - "aa-ibom-pydantic-ai-backend"
+source_brief:
+  hard_coded_path: "/Users/jbb/Projects/aa-ibom-stack/ibom-stack-brief.md"
+  note: "This agent stack is an explicit brief-level sibling stack outside the standard three-repo client topology."

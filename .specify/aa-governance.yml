@@ -1,0 +1,15 @@
+governance:
+  constitution_path: .specify/memory/constitution.md
+  lock_path: .specify/governance-lock.yml
+  allowed_repositories:
+    - aa-ibom-agent-stack
+    - aa-ibom-pydantic-deepagents
+    - aa-ibom-pydantic-ai-backend
+  coverage_threshold: 80
+  constitution_version: "4.7.1"
+  preset_id: "aa-stack-governance"
+  preset_version: "1.5.0"
+  forbid_project_overrides: true
+  issue_mapping_dir: .specify/issues
+  briefs_dir: briefs
+  require_approved_brief: true
