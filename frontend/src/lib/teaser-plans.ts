@@ -13,7 +13,7 @@ import { ROUTES } from "@/lib/constants";
 
 export interface TeaserPlan {
   name: string;
-  /** Display price, currency-prefixed (e.g. "$0", "$29"). Leave empty for "Custom". */
+  /** Display price, currency-prefixed (e.g. "£0", "£29"). Leave empty for "Custom". */
   price: string;
   /** Cadence label shown next to price (e.g. "/ month", "/ user / month"). */
   cadence?: string;
@@ -27,7 +27,7 @@ export interface TeaserPlan {
 export const TEASER_PLANS: TeaserPlan[] = [
   {
     name: "Starter",
-    price: "$0",
+    price: "£0",
     cadence: "/ month",
     description: "For individuals exploring the product.",
     features: ["100 messages / day", "1 connected data source", "Community support"],
@@ -35,7 +35,7 @@ export const TEASER_PLANS: TeaserPlan[] = [
   },
   {
     name: "Pro",
-    price: "$29",
+    price: "£29",
     cadence: "/ user / month",
     description: "For small teams getting real work done.",
     features: [
@@ -50,7 +50,7 @@ export const TEASER_PLANS: TeaserPlan[] = [
   },
   {
     name: "Business",
-    price: "$99",
+    price: "£99",
     cadence: "/ user / month",
     description: "For organisations rolling out across teams.",
     features: [

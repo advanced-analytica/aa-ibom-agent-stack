@@ -69,6 +69,7 @@ export function useChat(options: UseChatOptions = {}) {
   const thinkingEffortRef = useRef<"low" | "medium" | "high" | null>(null);
   const [pendingApproval, setPendingApproval] = useState<PendingApproval | null>(null);
   const [pendingQuestions, setPendingQuestions] = useState<AskUserQuestion[] | null>(null);
+  const [pendingClarification, setPendingClarification] = useState<AskUserQuestion[] | null>(null);
 
   const handleWebSocketMessage = useCallback(
     (event: MessageEvent) => {
@@ -314,6 +315,23 @@ export function useChat(options: UseChatOptions = {}) {
           );
           break;
         }
+        case "clarification_request": {
+          const { question, options, allow_free_text, allow_multiple } = wsEvent.data as {
+            question: string;
+            options: string[];
+            allow_free_text: boolean;
+            allow_multiple?: boolean;
+          };
+          setPendingClarification([
+            {
+              question,
+              options: options ?? [],
+              allowCustom: allow_free_text,
+              allowMultiple: allow_multiple ?? false,
+            },
+          ]);
+          break;
+        }
         case "todo_event": {
           const { event_type, todo } = wsEvent.data as {
             event_type: string;
@@ -540,6 +558,7 @@ export function useChat(options: UseChatOptions = {}) {
     setIsProcessing(false);
     setPendingApproval(null);
     setPendingQuestions(null);
+    setPendingClarification(null);
     useResearchStore.getState().markCurrentTurnStopped();
   }, [sendMessage, updateMessage, setCurrentMessageId]);
 
@@ -584,5 +603,11 @@ export function useChat(options: UseChatOptions = {}) {
     sendResumeDecisions,
     pendingQuestions,
     sendAskUserResponses,
+    pendingClarification,
+    sendClarificationResponse: (answers: AskUserAnswer[]) => {
+      setPendingClarification(null);
+      const selected = answers.find((a) => !a.skipped && a.answer.trim());
+      sendChatMessage(selected?.answer.trim() || "I skipped the clarification.");
+    },
   };
 }

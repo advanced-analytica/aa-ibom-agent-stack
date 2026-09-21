@@ -111,7 +111,7 @@ export function FeatureGlyph({ glyph, className }: FeatureGlyphProps) {
         className="text-foreground"
         fill="currentColor"
       >
-        $2,840
+        £2,840
       </text>
       <text
         x="100"

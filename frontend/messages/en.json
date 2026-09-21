@@ -448,7 +448,7 @@
       }
     },
     "footer": {
-      "tagline": "The AI assistant that knows your work.",
+      "tagline": "The AI assistant that knows your business.",
       "product": "Product",
       "company": "Company",
       "resources": "Resources",
@@ -884,13 +884,13 @@
         "eyebrow": "Meet your team's AI co-worker",
         "titlePre": "AI that",
         "titleHighlight": "knows",
-        "titleEm": "your business.",
+        "titleEm": "your work.",
         "description": "Plug in your docs, your tools, and your data. Ask anything — get answers grounded in everything your team has ever shipped.",
         "ctaPrimary": "Start free",
         "ctaSecondary": "Book a demo",
         "stat_teams": "Teams using",
         "stat_speed": "Faster answers",
-        "stat_uptime": "Always on",
+        "stat_uptime": "Always available",
         "ratingLabel": "rated 4.9/5 by 1,200+ teams",
         "trustNote": "No credit card required · Cancel anytime"
       },

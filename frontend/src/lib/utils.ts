@@ -42,7 +42,11 @@ export function getPasswordStrength(pw: string): { score: number; label: string;
 
 export const MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024;
 
-export const MAX_UPLOAD_SIZE_MB = parseInt(process.env.NEXT_PUBLIC_MAX_UPLOAD_SIZE_MB || "50", 10);
+export const MAX_UPLOAD_SIZE_MB = parseInt(process.env.NEXT_PUBLIC_MAX_UPLOAD_SIZE_MB || "10", 10);
+export const MAX_CHAT_ATTACHMENTS = parseInt(
+  process.env.NEXT_PUBLIC_MAX_CHAT_ATTACHMENTS || "20",
+  10,
+);
 
 export function formatBytes(bytes: number): string {
   if (!bytes || bytes < 0) return "0 B";
@@ -69,10 +73,10 @@ export function timeAgo(dateStr: string): string {
 
 export function formatCurrency(
   amountCents: number,
-  currency = "USD",
+  currency = "GBP",
   minimumFractionDigits = 0,
 ): string {
-  return (amountCents / 100).toLocaleString("en-US", {
+  return (amountCents / 100).toLocaleString("en-GB", {
     style: "currency",
     currency: currency.toUpperCase(),
     minimumFractionDigits,

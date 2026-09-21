@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { CornerDownLeft, Pencil, X } from "lucide-react";
+import { Check, CornerDownLeft, Pencil, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 
@@ -10,6 +10,8 @@ export interface QuestionPromptItem {
   options?: string[];
   /** Allow a free-form answer via the "Something else" field (default true). */
   allowCustom?: boolean;
+  /** Allow more than one listed option to be selected before submitting. */
+  allowMultiple?: boolean;
 }
 
 export interface QuestionPromptAnswer {
@@ -80,6 +82,7 @@ export function QuestionPrompt({ questions, disabled = false, onComplete }: Ques
         question={current.question}
         options={current.options ?? []}
         allowCustom={current.allowCustom ?? true}
+        allowMultiple={current.allowMultiple ?? false}
         isLast={step + 1 >= total}
         disabled={disabled}
         onAnswer={(text) => commit({ answer: text, skipped: false })}
@@ -93,6 +96,7 @@ interface SingleQuestionProps {
   question: string;
   options: string[];
   allowCustom: boolean;
+  allowMultiple: boolean;
   isLast: boolean;
   disabled: boolean;
   onAnswer: (answer: string) => void;
@@ -103,6 +107,7 @@ function SingleQuestion({
   question,
   options,
   allowCustom,
+  allowMultiple,
   isLast,
   disabled,
   onAnswer,
@@ -110,6 +115,7 @@ function SingleQuestion({
 }: SingleQuestionProps) {
   const hasOptions = options.length > 0;
   const [focusIdx, setFocusIdx] = useState(0);
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   // Open the free-form field straight away when there are no options to pick.
   const [customOpen, setCustomOpen] = useState(allowCustom && !hasOptions);
   const [customText, setCustomText] = useState("");
@@ -126,13 +132,30 @@ function SingleQuestion({
     if (text) onAnswer(text);
   };
 
+  const toggleOption = (option: string) => {
+    setSelectedOptions((current) =>
+      current.includes(option)
+        ? current.filter((selected) => selected !== option)
+        : [...current, option],
+    );
+  };
+
+  const submitSelectedOptions = () => {
+    if (selectedOptions.length > 0) onAnswer(selectedOptions.join("; "));
+  };
+
+  const chooseOption = (option: string) => {
+    if (allowMultiple) toggleOption(option);
+    else onAnswer(option);
+  };
+
   const onListKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (disabled || customOpen || !hasOptions) return;
     if (/^[1-9]$/.test(e.key)) {
       const idx = Number(e.key) - 1;
       if (idx < options.length) {
         e.preventDefault();
-        onAnswer(options[idx]!);
+        chooseOption(options[idx]!);
       }
       return;
     }
@@ -144,7 +167,7 @@ function SingleQuestion({
       setFocusIdx((i) => Math.max(i - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      onAnswer(options[focusIdx]!);
+      chooseOption(options[focusIdx]!);
     }
   };
 
@@ -163,30 +186,40 @@ function SingleQuestion({
         <ul className="divide-foreground/8 border-foreground/8 divide-y border-t">
           {options.map((option, i) => {
             const focused = i === focusIdx && !customOpen;
+            const selected = selectedOptions.includes(option);
             return (
               <li key={`${option}-${i}`}>
                 <button
                   type="button"
                   disabled={disabled}
                   onMouseEnter={() => setFocusIdx(i)}
-                  onClick={() => onAnswer(option)}
+                  onClick={() => chooseOption(option)}
                   className={cn(
                     "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
-                    focused ? "bg-foreground/[0.06]" : "hover:bg-foreground/[0.03]",
+                    selected
+                      ? "bg-foreground/[0.08]"
+                      : focused
+                        ? "bg-foreground/[0.06]"
+                        : "hover:bg-foreground/[0.03]",
                   )}
+                  aria-pressed={allowMultiple ? selected : undefined}
                 >
                   <span
                     className={cn(
                       "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg font-mono text-xs tabular-nums",
-                      focused
+                      selected
+                        ? "bg-foreground text-background"
+                        : focused
                         ? "bg-foreground/10 text-foreground"
                         : "bg-foreground/5 text-muted-foreground",
                     )}
                   >
-                    {i + 1}
+                    {selected ? <Check className="h-3.5 w-3.5" /> : i + 1}
                   </span>
                   <span className="text-foreground min-w-0 flex-1 truncate text-sm">{option}</span>
-                  {focused && <CornerDownLeft className="text-muted-foreground h-4 w-4 shrink-0" />}
+                  {focused && !allowMultiple && (
+                    <CornerDownLeft className="text-muted-foreground h-4 w-4 shrink-0" />
+                  )}
                 </button>
               </li>
             );
@@ -248,6 +281,17 @@ function SingleQuestion({
             >
               Skip
             </Button>
+            {allowMultiple && (
+              <Button
+                type="button"
+                size="sm"
+                className="h-7 text-xs"
+                disabled={disabled || selectedOptions.length === 0}
+                onClick={submitSelectedOptions}
+              >
+                {isLast ? "Done" : "Next"}
+              </Button>
+            )}
           </div>
         )}
       </div>

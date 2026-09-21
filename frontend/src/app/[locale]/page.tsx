@@ -59,14 +59,14 @@ const LOGOS = [
 const MARQUEE_ITEMS = [
   "Discover",
   "Search",
-  "Summarize",
+  "Summarise",
   "Decide",
   "Connect",
   "Automate",
   "Track",
   "Improve",
   "Onboard",
-  "Analyze",
+  "Analyse",
   "Translate",
   "Draft",
   "Schedule",
@@ -102,7 +102,7 @@ const TESTIMONIALS = [
 const PLANS = [
   {
     name: "Starter",
-    price: "$0",
+    price: "£0",
     cadence: "/ month",
     description: "For individuals exploring the product.",
     features: ["100 messages / day", "1 connected data source", "Community support"],
@@ -110,7 +110,7 @@ const PLANS = [
   },
   {
     name: "Pro",
-    price: "$29",
+    price: "£29",
     cadence: "/ user / month",
     description: "For small teams getting real work done.",
     features: [
@@ -125,7 +125,7 @@ const PLANS = [
   },
   {
     name: "Business",
-    price: "$99",
+    price: "£99",
     cadence: "/ user / month",
     description: "For organisations rolling out across teams.",
     features: [

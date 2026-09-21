@@ -55,6 +55,8 @@ export function ChatContainer() {
     sendResumeDecisions,
     pendingQuestions,
     sendAskUserResponses,
+    pendingClarification,
+    sendClarificationResponse,
   } = useChat({
     conversationId: currentConversationId,
     onConversationCreated: handleConversationCreated,
@@ -209,6 +211,8 @@ export function ChatContainer() {
       onResumeDecisions={sendResumeDecisions}
       pendingQuestions={pendingQuestions}
       onAnswerQuestions={sendAskUserResponses}
+      pendingClarification={pendingClarification}
+      onAnswerClarification={sendClarificationResponse}
       onStop={stopGeneration}
     />
   );
@@ -239,6 +243,8 @@ interface ChatUIProps {
   onResumeDecisions?: (decisions: Decision[]) => void;
   pendingQuestions?: AskUserQuestion[] | null;
   onAnswerQuestions?: (answers: AskUserAnswer[]) => void;
+  pendingClarification?: AskUserQuestion[] | null;
+  onAnswerClarification?: (answers: AskUserAnswer[]) => void;
   onStop?: () => void;
 }
 
@@ -262,6 +268,8 @@ function ChatUI({
   onResumeDecisions,
   pendingQuestions,
   onAnswerQuestions,
+  pendingClarification,
+  onAnswerClarification,
   onStop,
 }: ChatUIProps) {
   const tc = useTranslations("common");
@@ -319,6 +327,15 @@ function ChatUI({
             />
           </div>
         )}
+        {pendingClarification && pendingClarification.length > 0 && onAnswerClarification && (
+          <div className="px-2 pb-2 sm:px-4 sm:pb-2">
+            <QuestionPrompt
+              questions={pendingClarification}
+              disabled={!isConnected}
+              onComplete={onAnswerClarification}
+            />
+          </div>
+        )}
         <div className="px-2 pb-2 sm:px-4 sm:pb-4">
           {queuedMessages && queuedMessages.length > 0 && onCancelQueued && (
             <PendingMessages messages={queuedMessages} onCancel={onCancelQueued} />
@@ -330,7 +347,8 @@ function ChatUI({
                 disabled={
                   !isConnected ||
                   !!pendingApproval ||
-                  !!(pendingQuestions && pendingQuestions.length)
+                  !!(pendingQuestions && pendingQuestions.length) ||
+                  !!(pendingClarification && pendingClarification.length)
                 }
                 isProcessing={isProcessing}
                 onStop={onStop}

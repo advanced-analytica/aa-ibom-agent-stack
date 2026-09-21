@@ -46,7 +46,7 @@ export function StepData() {
         <ChoiceCard
           icon={Upload}
           title="Upload a file"
-          description="PDF, DOCX, MD, or TXT up to 50 MB"
+          description="PDF, DOCX, MD, or TXT up to 10 MB"
           selected={choice === "upload"}
           onClick={() => {
             setChoice("upload");

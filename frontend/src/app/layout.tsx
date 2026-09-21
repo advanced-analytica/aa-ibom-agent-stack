@@ -1,13 +1,34 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Geist_Mono, Inter } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { defaultLocale } from "@/i18n";
 import { SITE } from "@/lib/seo";
 
-const display = Bricolage_Grotesque({
-  subsets: ["latin"],
+const display = localFont({
+  src: [
+    {
+      path: "./fonts/TT-Commons-Pro-Regular.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "./fonts/TT-Commons-Pro-Medium.ttf",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "./fonts/TT-Commons-Pro-DemiBold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "./fonts/TT-Commons-Pro-Bold.ttf",
+      weight: "800",
+      style: "normal",
+    },
+  ],
   variable: "--font-display",
-  weight: ["700", "800"],
   display: "swap",
 });
 

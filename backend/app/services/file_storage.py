@@ -36,7 +36,7 @@ ALLOWED_MIME_TYPES = {
 
 IMAGE_MIME_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
 
-MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
+MAX_UPLOAD_SIZE = settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
 
 def normalize_mime_type(mime_type: str | None) -> str:

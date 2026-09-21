@@ -6,7 +6,7 @@ import { Send, Mic, MicOff, Paperclip, X, FileText, Upload } from "lucide-react"
 import Image from "next/image";
 import { toast } from "sonner";
 import { uploadFile, getFileUrl, type FileUploadResponse } from "@/lib/file-api";
-import { getErrorMessage, MAX_UPLOAD_SIZE_MB } from "@/lib/utils";
+import { getErrorMessage, MAX_CHAT_ATTACHMENTS, MAX_UPLOAD_SIZE_MB } from "@/lib/utils";
 import {
   BUILTIN_COMMANDS,
   searchCommands,
@@ -53,6 +53,7 @@ export function ChatInput({
     () => (showPalette ? searchCommands(allCommands, message) : []),
     [showPalette, message, allCommands],
   );
+  const isFileLimitReached = attachedFiles.length >= MAX_CHAT_ATTACHMENTS;
 
   useEffect(() => {
     setPaletteIndex(0);
@@ -256,7 +257,20 @@ export function ChatInput({
   // File upload to backend — shared by the file picker and drag-and-drop.
   const uploadFiles = useCallback(async (files: File[]) => {
     if (files.length === 0) return;
-    for (const file of files) {
+    const remainingSlots = MAX_CHAT_ATTACHMENTS - attachedFiles.length;
+    if (remainingSlots <= 0) {
+      toast.error(`You can attach up to ${MAX_CHAT_ATTACHMENTS} files per chat message.`);
+      return;
+    }
+
+    const filesToUpload = files.slice(0, remainingSlots);
+    if (files.length > remainingSlots) {
+      toast.error(
+        `You can attach up to ${MAX_CHAT_ATTACHMENTS} files per chat message. Only the first ${remainingSlots} will be uploaded.`,
+      );
+    }
+
+    for (const file of filesToUpload) {
       if (file.size > MAX_UPLOAD_SIZE_MB * 1024 * 1024) {
         toast.error(`${file.name}: File too large. Maximum ${MAX_UPLOAD_SIZE_MB}MB.`);
         continue;
@@ -272,7 +286,7 @@ export function ChatInput({
         setIsUploading(false);
       }
     }
-  }, []);
+  }, [attachedFiles.length]);
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -422,10 +436,18 @@ export function ChatInput({
             variant="ghost"
             size="icon"
             onClick={() => fileInputRef.current?.click()}
-            disabled={disabled || isUploading}
+            disabled={disabled || isUploading || isFileLimitReached}
             className="h-9 w-9"
-            title="Attach file"
-            aria-label="Attach file"
+            title={
+              isFileLimitReached
+                ? `Maximum ${MAX_CHAT_ATTACHMENTS} files attached`
+                : "Attach file"
+            }
+            aria-label={
+              isFileLimitReached
+                ? `Maximum ${MAX_CHAT_ATTACHMENTS} files attached`
+                : "Attach file"
+            }
           >
             {isUploading ? (
               <Spinner className="text-muted-foreground h-4 w-4" />

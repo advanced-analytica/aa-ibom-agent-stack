@@ -34,6 +34,7 @@ async def health_check() -> dict[str, Any]:
     return {
         "status": "healthy",
         "max_upload_size_mb": settings.MAX_UPLOAD_SIZE_MB,
+        "max_chat_attachments": settings.MAX_CHAT_ATTACHMENTS,
     }
 
 

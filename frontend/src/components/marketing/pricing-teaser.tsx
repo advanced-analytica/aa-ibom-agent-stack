@@ -23,19 +23,17 @@ interface PricingTeaserProps {
   fullPricingHref?: string;
 }
 
-/** Extracts the first integer from a price string ("$29" → 29, "129 zł" → 129).
+/** Extracts the first integer from a price string ("£29" → 29).
  *  Returns -1 when there's no number (e.g. "Custom" tier). */
 function parsePerSeat(priceStr: string): number {
   const m = priceStr.replace(/\s/g, "").match(/(\d+)/);
   return m?.[1] ? parseInt(m[1], 10) : -1;
 }
 
-/** Currency wrapping a parsed number — preserves the original prefix/suffix
- *  ("$" prefix vs. "zł" suffix). */
+/** Currency wrapping a parsed number — preserves the original prefix. */
 function currencyWrap(priceStr: string, value: number): string {
-  const prefix = priceStr.startsWith("$") ? "$" : "";
-  const suffix = priceStr.endsWith("zł") ? " zł" : "";
-  return `${prefix}${value.toLocaleString()}${suffix}`;
+  const prefix = priceStr.startsWith("£") ? "£" : "";
+  return `${prefix}${value.toLocaleString("en-GB")}`;
 }
 
 /** Heuristic tier-from-seats: 1 seat → first tier (Starter / free),

@@ -134,6 +134,7 @@ export type WSEventType =
   | "error"
   | "conversation_created"
   | "message_saved"
+  | "clarification_request"
   | "tool_approval_required"
   | "ask_user"
   | "todo_event"
@@ -230,6 +231,8 @@ export interface AskUserQuestion {
   options: string[];
   /** Whether the user may type a free-form answer instead of picking an option. */
   allowCustom: boolean;
+  /** Whether the user may pick more than one listed option. */
+  allowMultiple?: boolean;
 }
 
 export interface AskUserAnswer {
@@ -241,6 +244,16 @@ export interface AskUserEvent {
   type: "ask_user";
   data: {
     questions: { question: string; options: string[]; allow_custom: boolean }[];
+  };
+}
+
+export interface ClarificationRequestEvent {
+  type: "clarification_request";
+  data: {
+    question: string;
+    options: string[];
+    allow_free_text: boolean;
+    allow_multiple?: boolean;
   };
 }
 

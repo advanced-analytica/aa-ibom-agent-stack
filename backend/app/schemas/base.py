@@ -65,6 +65,7 @@ class AgentModelsResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     max_upload_size_mb: int | None = None
+    max_chat_attachments: int | None = None
 
 
 class HealthDetailResponse(BaseModel):

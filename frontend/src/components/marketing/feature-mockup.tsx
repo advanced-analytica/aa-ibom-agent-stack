@@ -132,7 +132,7 @@ function BillingMockup({ className }: { className?: string }) {
             Monthly recurring
           </p>
           <p className="text-foreground font-display mt-1 text-3xl font-bold tracking-tight">
-            $2,840
+            £2,840
           </p>
           <p className="text-brand mt-0.5 flex items-center gap-1 text-xs font-medium">
             <TrendingUp className="h-3 w-3" />

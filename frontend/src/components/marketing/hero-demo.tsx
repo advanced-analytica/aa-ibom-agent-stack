@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const SCRIPT = [
   {
     role: "user" as const,
-    text: "Summarize this quarter's customer onboarding feedback.",
+    text: "Summarise this quarter's customer onboarding feedback.",
   },
   {
     role: "tool" as const,
@@ -19,6 +19,8 @@ const SCRIPT = [
     text: "Across 137 onboarding sessions, top three friction points are: (1) database setup confusion, (2) Stripe webhook configuration, (3) missing example projects. 58% of churned trials cited #1.",
   },
 ];
+const MESSAGE_REVEAL_DELAY_MS = 1600;
+const LOOP_HOLD_DELAY_MS = 4000;
 
 /** Scripted chat demo. All messages are always in the DOM at full length, so
  *  the card is a fixed height and never resizes — we only fade/slide each
@@ -29,11 +31,14 @@ export function HeroDemo() {
   const [revealed, setRevealed] = useState(SCRIPT.length);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setRevealed((r) => (r >= SCRIPT.length ? 1 : r + 1));
-    }, 1600);
-    return () => clearInterval(id);
-  }, []);
+    const id = setTimeout(
+      () => {
+        setRevealed((r) => (r >= SCRIPT.length ? 1 : r + 1));
+      },
+      revealed >= SCRIPT.length ? LOOP_HOLD_DELAY_MS : MESSAGE_REVEAL_DELAY_MS,
+    );
+    return () => clearTimeout(id);
+  }, [revealed]);
 
   return (
     <div className="border-foreground/15 bg-card mx-auto w-full max-w-5xl overflow-hidden rounded-2xl border shadow-2xl">
@@ -78,7 +83,7 @@ export function HeroDemo() {
               <div className="bg-card border-foreground/10 max-w-[85%] rounded-2xl rounded-tl-sm border p-5">
                 <div className="text-foreground/55 mb-2.5 flex items-center gap-2 text-xs">
                   <Bot className="h-3.5 w-3.5" />
-                  <span className="eyebrow">Assistant</span>
+                  <span className="eyebrow">Brando</span>
                   {shown && i === revealed - 1 && (
                     <span className="bg-brand ml-auto inline-block h-2 w-2 animate-pulse rounded-full" />
                   )}

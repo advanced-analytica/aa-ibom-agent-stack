@@ -20,7 +20,7 @@ interface HeroCta {
 
 interface PageHeroProps {
   eyebrow: string;
-  /** Headline supports `<em>` for italic Bricolage accent. */
+  /** Headline supports `<em>` for italic display-font accent. */
   title: ReactNode;
   description?: string;
   /** Optional mono-pills row of stats. */
