@@ -211,10 +211,10 @@ export function ChatInput({
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (!files || files.length === 0) return;
+      const files = Array.from(e.target.files ?? []);
+      if (files.length === 0) return;
       e.target.value = "";
-      await uploadFiles(Array.from(files));
+      await uploadFiles(files);
     },
     [uploadFiles],
   );
@@ -278,7 +278,7 @@ export function ChatInput({
           onPick={runSlashCommand}
         />
       )}
-      {attachedFiles.length > 0 && (
+      {(attachedFiles.length > 0 || isUploading) && (
         <div className="flex flex-wrap items-center gap-2 pb-2">
           {attachedFiles.map((file) => (
             <div key={file.id} className="relative">

@@ -14,6 +14,7 @@ from app.services.file_storage import (
     MAX_UPLOAD_SIZE,
     classify_file,
     get_file_storage,
+    normalize_mime_type,
 )
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,8 @@ class FileUploadService:
         Returns:
             Tuple of (is_valid, error_message).
         """
-        if content_type not in ALLOWED_MIME_TYPES:
+        mime_type = normalize_mime_type(content_type)
+        if mime_type not in ALLOWED_MIME_TYPES:
             return False, f"File type '{content_type}' is not supported."
         if size > MAX_UPLOAD_SIZE:
             return False, f"File too large. Maximum size is {MAX_UPLOAD_SIZE // (1024 * 1024)}MB."
@@ -131,8 +133,9 @@ class FileUploadService:
         if not is_valid:
             raise BadRequestError(message=error or "Invalid file")
 
-        file_type = self.classify_file(content_type or "", filename)
-        parsed_content = await self.parse_content(file_data, file_type, content_type or "")
+        mime_type = normalize_mime_type(content_type)
+        file_type = self.classify_file(mime_type, filename)
+        parsed_content = await self.parse_content(file_data, file_type, mime_type)
 
         storage = get_file_storage()
         storage_path = await storage.save(str(user_id), filename, file_data)
@@ -140,7 +143,7 @@ class FileUploadService:
         return await self.create_chat_file(
             user_id=user_id,
             filename=filename,
-            mime_type=content_type or "application/octet-stream",
+            mime_type=mime_type or "application/octet-stream",
             size=len(file_data),
             storage_path=storage_path,
             file_type=file_type,

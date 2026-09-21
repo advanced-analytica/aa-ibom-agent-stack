@@ -39,8 +39,19 @@ IMAGE_MIME_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10MB
 
 
+def normalize_mime_type(mime_type: str | None) -> str:
+    """Return the base media type without parameters such as charset.
+
+    Browser and multipart implementations may report text uploads as
+    ``text/plain;charset=utf-8``. Validation and classification should use the
+    media type only.
+    """
+    return (mime_type or "").split(";", 1)[0].strip().lower()
+
+
 def classify_file(mime_type: str, filename: str) -> str:
     """Classify file type based on MIME type and extension."""
+    mime_type = normalize_mime_type(mime_type)
     if mime_type in IMAGE_MIME_TYPES:
         return "image"
     if mime_type == "application/pdf" or filename.lower().endswith(".pdf"):
