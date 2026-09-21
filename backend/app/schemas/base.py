@@ -59,7 +59,7 @@ class ErrorResponse(BaseModel):
 
 class AgentModelsResponse(BaseModel):
     default: str
-    models: list[str]
+    models: list[dict[str, Any]]
 
 
 class HealthResponse(BaseModel):

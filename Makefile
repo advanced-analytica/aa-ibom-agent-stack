@@ -290,15 +290,6 @@ docker-prod-build:
 
 
 # === Docker: Individual Services ===
-docker-db:
-	docker compose up -d db
-	@echo ""
-	@echo "✅ PostgreSQL started on port 5432"
-	@echo "   Connection: postgresql://postgres:postgres@localhost:5432/ibom_ai_agent_stack"
-
-docker-db-stop:
-	docker compose stop db
-
 docker-redis:
 	docker compose up -d redis
 	@echo ""

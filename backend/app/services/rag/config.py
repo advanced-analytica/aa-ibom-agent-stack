@@ -73,34 +73,40 @@ def get_supported_formats(parser_name: str = "pymupdf") -> set[str]:
     return PARSER_FORMATS.get(parser_name, PYMUPDF_FORMATS)
 
 
-# Known embedding models and their output dimensions.
-# Used to auto-set vector store dimension from model name.
-EMBEDDING_DIMENSIONS: dict[str, int] = {
-    "text-embedding-3-small": 1536,
-    "text-embedding-3-large": 3072,
-    "text-embedding-ada-002": 1536,
-    "voyage-3": 1024,
-    "voyage-3-lite": 512,
-    "voyage-code-3": 1024,
-    "gemini-embedding-exp-03-07": 3072,
-    "all-MiniLM-L6-v2": 384,
-    "all-mpnet-base-v2": 768,
-    "bge-small-en-v1.5": 384,
-    "bge-base-en-v1.5": 768,
-    "bge-large-en-v1.5": 1024,
+# Known embedding providers/models and their output dimensions.
+# Used to auto-set vector store dimension from provider + model.
+EMBEDDING_DIMENSIONS: dict[str, dict[str, int]] = {
+    "openai": {
+        "text-embedding-3-small": 1536,
+        "text-embedding-3-large": 3072,
+        "text-embedding-ada-002": 1536,
+    },
+    "gemini": {
+        "gemini-embedding-exp-03-07": 3072,
+    },
 }
 
 
 class EmbeddingsConfig(BaseModel):
     """Embeddings configuration. Dimension is auto-derived from model name."""
 
+    provider: str = "gemini"
     model: str = "gemini-embedding-exp-03-07"
     dim: int = 3072
 
     @model_validator(mode="after")
     def set_dim_from_model(self) -> "EmbeddingsConfig":
-        if self.model in EMBEDDING_DIMENSIONS:
-            self.dim = EMBEDDING_DIMENSIONS[self.model]
+        self.provider = self.provider.strip().lower()
+        if self.provider == "google":
+            self.provider = "gemini"
+        provider_models = EMBEDDING_DIMENSIONS.get(self.provider)
+        if provider_models is None:
+            raise ValueError(f"Unsupported embeddings provider: {self.provider}")
+        if self.model not in provider_models:
+            raise ValueError(
+                f"Unsupported embedding model for provider {self.provider}: {self.model}"
+            )
+        self.dim = provider_models[self.model]
         return self
 
 

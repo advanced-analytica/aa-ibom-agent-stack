@@ -41,6 +41,23 @@ from app.services.research import RESEARCH_TOOL_NAMES, ResearchToolkit
 logger = logging.getLogger(__name__)
 
 
+def _tool_result_event_payload(tool_event: FunctionToolResultEvent) -> tuple[str, str]:
+    """Extract result payload across pydantic-ai event shape changes."""
+    result = getattr(tool_event, "result", None)
+    part = getattr(tool_event, "part", None)
+    tool_call_id = (
+        getattr(tool_event, "tool_call_id", None)
+        or getattr(part, "tool_call_id", None)
+        or ""
+    )
+    content = (
+        getattr(result, "content", None)
+        if result is not None
+        else getattr(part, "content", getattr(tool_event, "content", None))
+    )
+    return str(tool_call_id), "" if content is None else str(content)
+
+
 class AgentSession:
     """One WebSocket session with the AI agent."""
 
@@ -568,14 +585,15 @@ class AgentSession:
                 pending[tool_event.part.tool_call_id] = tc
                 await send_event(self.websocket, "tool_call", tc)
             elif isinstance(tool_event, FunctionToolResultEvent):
-                tc = pending.get(tool_event.tool_call_id)
+                tool_call_id, content = _tool_result_event_payload(tool_event)
+                tc = pending.get(tool_call_id)
                 if tc is not None:
-                    tc["result"] = str(tool_event.result.content)
+                    tc["result"] = content
                 await send_event(
                     self.websocket,
                     "tool_result",
                     {
-                        "tool_call_id": tool_event.tool_call_id,
-                        "content": str(tool_event.result.content),
+                        "tool_call_id": tool_call_id,
+                        "content": content,
                     },
                 )

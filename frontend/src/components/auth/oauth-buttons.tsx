@@ -1,7 +1,5 @@
 "use client";
 
-import { BACKEND_URL } from "@/lib/constants";
-
 import { BrandIcon } from "@/components/marketing/brand-icon";
 
 type Provider = "google" | "github" | "microsoft";
@@ -40,7 +38,7 @@ export function OAuthButtons({ next, variant = "signin" }: OAuthButtonsProps) {
   return (
     <div className="space-y-2.5">
       {providers.map((provider) => {
-        const url = `${BACKEND_URL}/api/v1/oauth/${provider}/login${
+        const url = `/api/auth/${provider}${
           next ? `?next=${encodeURIComponent(next)}` : ""
         }`;
         const label =

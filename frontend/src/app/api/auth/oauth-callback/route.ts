@@ -1,34 +1,57 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { setAuthCookies } from "@/lib/auth-cookies";
+import {
+  clearOAuthStateCookie,
+  OAUTH_STATE_COOKIE,
+  setAuthCookies,
+} from "@/lib/auth-cookies";
 import { backendFetch, BackendApiError } from "@/lib/server-api";
 
 interface OAuthCallbackBody {
-  access_token: string;
-  refresh_token: string;
+  code: string;
+  state: string;
+  redirect_uri?: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as Partial<OAuthCallbackBody>;
-    if (!body.access_token || !body.refresh_token) {
-      return NextResponse.json({ detail: "Missing tokens" }, { status: 400 });
+    if (!body.code || !body.state) {
+      return NextResponse.json({ detail: "Missing OAuth callback parameters" }, { status: 400 });
     }
 
+    const expectedState = request.cookies.get(OAUTH_STATE_COOKIE)?.value;
+    if (!expectedState || expectedState !== body.state) {
+      return NextResponse.json({ detail: "Invalid OAuth state" }, { status: 400 });
+    }
+
+    const tokens = await backendFetch<{ access_token: string; refresh_token: string }>(
+      "/api/v1/auth/google/callback",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          code: body.code,
+          state: body.state,
+          redirect_uri: body.redirect_uri,
+        }),
+      },
+    );
+
     const user = await backendFetch("/api/v1/auth/me", {
-      headers: { Authorization: `Bearer ${body.access_token}` },
+      headers: { Authorization: `Bearer ${tokens.access_token}` },
     });
 
     const response = NextResponse.json({
       user,
-      access_token: body.access_token,
+      access_token: tokens.access_token,
       message: "Sign-in successful",
     });
 
     setAuthCookies(response, {
-      accessToken: body.access_token,
-      refreshToken: body.refresh_token,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
     });
+    clearOAuthStateCookie(response);
     return response;
   } catch (error) {
     if (error instanceof BackendApiError) {

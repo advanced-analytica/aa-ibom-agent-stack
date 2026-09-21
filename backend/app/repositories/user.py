@@ -22,6 +22,22 @@ async def get_by_email(db: AsyncSession, email: str) -> User | None:
     return result.scalar_one_or_none()
 
 
+async def get_by_google_sub(db: AsyncSession, google_sub: str) -> User | None:
+    """Get user by their stable Google subject identifier."""
+    result = await db.execute(select(User).where(User.google_sub == google_sub))
+    return result.scalar_one_or_none()
+
+
+async def get_by_supabase_auth_user_id(
+    db: AsyncSession, supabase_auth_user_id: str
+) -> User | None:
+    """Get user by their Supabase Auth user id."""
+    result = await db.execute(
+        select(User).where(User.supabase_auth_user_id == supabase_auth_user_id)
+    )
+    return result.scalar_one_or_none()
+
+
 async def get_multi(
     db: AsyncSession,
     *,
@@ -44,6 +60,9 @@ async def create(
     email: str,
     hashed_password: str | None,
     full_name: str | None = None,
+    google_sub: str | None = None,
+    supabase_auth_user_id: str | None = None,
+    avatar_url: str | None = None,
     is_active: bool = True,
     role: str = "user",
     is_app_admin: bool = False,
@@ -55,7 +74,10 @@ async def create(
     user = User(
         email=email,
         hashed_password=hashed_password,
+        google_sub=google_sub,
+        supabase_auth_user_id=supabase_auth_user_id,
         full_name=full_name,
+        avatar_url=avatar_url,
         is_active=is_active,
         role=role,
         is_app_admin=is_app_admin,

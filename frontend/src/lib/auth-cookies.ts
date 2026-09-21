@@ -16,6 +16,8 @@ import type { NextResponse } from "next/server";
 
 export const ACCESS_TOKEN_MAX_AGE = 60 * 15; // 15 minutes
 export const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
+export const OAUTH_STATE_COOKIE = "oauth_state";
+export const OAUTH_STATE_MAX_AGE = 60 * 10; // 10 minutes
 
 /** Exported for the unit test — the module-level value is read once at startup. */
 export function resolveCookieSecure(env: { COOKIE_SECURE?: string; NODE_ENV?: string }): boolean {
@@ -58,4 +60,12 @@ export function setAuthCookies(response: NextResponse, { accessToken, refreshTok
 export function clearAuthCookies(response: NextResponse) {
   response.cookies.set("access_token", "", cookieOptions(0));
   response.cookies.set("refresh_token", "", cookieOptions(0));
+}
+
+export function setOAuthStateCookie(response: NextResponse, state: string) {
+  response.cookies.set(OAUTH_STATE_COOKIE, state, cookieOptions(OAUTH_STATE_MAX_AGE));
+}
+
+export function clearOAuthStateCookie(response: NextResponse) {
+  response.cookies.set(OAUTH_STATE_COOKIE, "", cookieOptions(0));
 }

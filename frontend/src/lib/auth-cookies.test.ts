@@ -2,10 +2,14 @@ import { describe, it, expect } from "vitest";
 import { NextResponse } from "next/server";
 import {
   ACCESS_TOKEN_MAX_AGE,
+  OAUTH_STATE_COOKIE,
+  OAUTH_STATE_MAX_AGE,
   REFRESH_TOKEN_MAX_AGE,
   clearAuthCookies,
+  clearOAuthStateCookie,
   resolveCookieSecure,
   setAuthCookies,
+  setOAuthStateCookie,
 } from "./auth-cookies";
 
 describe("resolveCookieSecure", () => {
@@ -64,5 +68,21 @@ describe("clearAuthCookies", () => {
 
     expect(response.cookies.get("access_token")?.maxAge).toBe(0);
     expect(response.cookies.get("refresh_token")?.maxAge).toBe(0);
+  });
+});
+
+describe("OAuth state cookies", () => {
+  it("stores and clears the OAuth state as an httpOnly cookie", () => {
+    const response = NextResponse.json({});
+    setOAuthStateCookie(response, "state-token");
+
+    const state = response.cookies.get(OAUTH_STATE_COOKIE);
+    expect(state?.value).toBe("state-token");
+    expect(state?.httpOnly).toBe(true);
+    expect(state?.sameSite).toBe("lax");
+    expect(state?.maxAge).toBe(OAUTH_STATE_MAX_AGE);
+
+    clearOAuthStateCookie(response);
+    expect(response.cookies.get(OAUTH_STATE_COOKIE)?.maxAge).toBe(0);
   });
 });

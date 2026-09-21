@@ -11,6 +11,23 @@ import { cn } from "@/lib/utils";
 
 type ThinkingEffort = "off" | "low" | "medium" | "high";
 type Tab = "model" | "settings";
+type ModelOption = {
+  value: string;
+  label: string;
+  provider?: string;
+  model?: string;
+};
+type ApiModelOption =
+  | string
+  | {
+      id?: string;
+      value?: string;
+      provider?: string;
+      model?: string;
+      label?: string;
+      enabled?: boolean;
+      default?: boolean;
+    };
 
 interface ChatControlsProps {
   onModelChange?: (model: string | null) => void;
@@ -38,10 +55,10 @@ export function ChatControls({
   const [tab, setTab] = useState<Tab>("model");
   const { currentConversationId } = useConversationStore();
 
-  const [availableModels, setAvailableModels] = useState<{ value: string; label: string }[]>([
+  const [availableModels, setAvailableModels] = useState<ModelOption[]>([
     { value: "", label: "Default" },
   ]);
-  const [selectedModel, setSelectedModel] = useState<{ value: string; label: string }>({
+  const [selectedModel, setSelectedModel] = useState<ModelOption>({
     value: "",
     label: "Default",
   });
@@ -53,10 +70,24 @@ export function ChatControls({
     fetch("/api/v1/agent/models", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (data?.models) {
+        if (Array.isArray(data?.models)) {
+          const defaultLabel = data.default_label ?? data.default;
+          const apiModels = data.models
+            .filter((m: ApiModelOption) => typeof m === "string" || m.enabled !== false)
+            .map((m: ApiModelOption): ModelOption => {
+              if (typeof m === "string") return { value: m, label: m };
+              const value = m.id ?? m.value ?? (m.provider && m.model ? `${m.provider}:${m.model}` : "");
+              return {
+                value,
+                label: m.label ?? m.model ?? value,
+                provider: m.provider,
+                model: m.model,
+              };
+            })
+            .filter((m: ModelOption) => m.value && m.label);
           const models = [
-            { value: "", label: `Default (${data.default})` },
-            ...data.models.map((m: string) => ({ value: m, label: m })),
+            { value: "", label: defaultLabel ? `Default (${defaultLabel})` : "Default" },
+            ...apiModels,
           ];
           setAvailableModels(models);
           setSelectedModel(models[0]);
@@ -200,9 +231,9 @@ function ModelPanel({
   selected,
   onPick,
 }: {
-  models: { value: string; label: string }[];
-  selected: { value: string; label: string };
-  onPick: (m: { value: string; label: string }) => void;
+  models: ModelOption[];
+  selected: ModelOption;
+  onPick: (m: ModelOption) => void;
 }) {
   return (
     <div>
@@ -225,7 +256,14 @@ function ModelPanel({
                     : "border-border text-foreground/75 hover:border-foreground/25 hover:bg-accent/60 hover:text-foreground",
                 )}
               >
-                <span className="truncate font-medium">{m.label}</span>
+                <span className="min-w-0">
+                  <span className="block truncate font-medium">{m.label}</span>
+                  {m.provider && m.model && (
+                    <span className="text-foreground/45 block truncate font-mono text-[10px] tracking-wider uppercase">
+                      {m.provider}
+                    </span>
+                  )}
+                </span>
                 {isActive && <Check className="text-foreground h-3.5 w-3.5 shrink-0" />}
               </button>
             </li>

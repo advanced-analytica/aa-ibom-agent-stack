@@ -19,8 +19,6 @@ from pydantic_ai.messages import (
     ToolReturnPart,
     UserPromptPart,
 )
-from pydantic_ai.models.google import GoogleModel
-from pydantic_ai.providers.google import GoogleProvider
 from pydantic_ai.settings import ModelSettings
 from pydantic_ai_summarization import ContextManagerCapability
 from pydantic_ai_todo import TodoCapability
@@ -35,15 +33,13 @@ from app.agents.tools.chart_tool import ChartType, create_chart
 from app.agents.tools.rag_tool import search_knowledge_base
 from app.agents.utils import get_current_datetime
 from app.core.config import settings
+from app.services.model_registry import build_chat_model
 
 logger = logging.getLogger(__name__)
 
 
-def _build_model(model_name: str) -> GoogleModel:
-    return GoogleModel(
-        model_name or settings.AI_MODEL,
-        provider=GoogleProvider(api_key=settings.GOOGLE_API_KEY),
-    )
+def _build_model(model_name: str | None) -> Any:
+    return build_chat_model(model_name, settings)
 
 
 AskUserCallback = Callable[[list[dict[str, Any]]], Awaitable[list[dict[str, Any]]]]
@@ -87,7 +83,7 @@ class AssistantAgent:
         self.todo_capability = todo_capability
         self.subagent_capability = subagent_capability
         self.context_manager_capability = context_manager_capability
-        self.model_name = model_name or settings.AI_MODEL
+        self.model_name = model_name or f"{settings.CHAT_PROVIDER}:{settings.CHAT_MODEL}"
         # ``temperature`` stays ``None`` when caller didn't set it — don't fall
         # back to settings.AI_TEMPERATURE here. Reasoning/o-series models
         # (gpt-5.5, o1, …) reject the parameter entirely, so we only forward

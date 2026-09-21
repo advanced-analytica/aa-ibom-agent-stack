@@ -1,8 +1,10 @@
 """Application configuration using Pydantic BaseSettings."""
 # ruff: noqa: I001 - Imports structured for Jinja2 template conditionals
 
+import json
 from pathlib import Path
 from typing import Literal
+from urllib.parse import quote, urlencode
 
 from pydantic import computed_field, field_validator, ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -16,6 +18,28 @@ def find_env_file() -> Path | None:
         if env_file.exists():
             return env_file
     return None
+
+
+def _parse_env_list(value: object) -> object:
+    """Accept JSON arrays or comma-separated strings for list settings."""
+    if not isinstance(value, str):
+        return value
+    stripped = value.strip()
+    if not stripped:
+        return []
+    if stripped.startswith("["):
+        return json.loads(stripped)
+    return [item.strip() for item in stripped.split(",") if item.strip()]
+
+
+def _quote_db_part(value: str) -> str:
+    """Quote database URL user/password parts while preserving plain env values."""
+    return quote(value, safe="")
+
+
+def _db_query(params: dict[str, str]) -> str:
+    filtered = {key: value for key, value in params.items() if value}
+    return f"?{urlencode(filtered)}" if filtered else ""
 
 
 class Settings(BaseSettings):
@@ -47,28 +71,34 @@ class Settings(BaseSettings):
     LOGFIRE_SERVICE_NAME: str = "ibom_ai_agent_stack"
     LOGFIRE_ENVIRONMENT: str = "development"
 
-    POSTGRES_HOST: str = "localhost"
+    POSTGRES_HOST: str = "aws-1-eu-west-1.pooler.supabase.com"
     POSTGRES_PORT: int = 5432
-    POSTGRES_USER: str = "postgres"
+    POSTGRES_USER: str = "postgres.<project-ref>"
     POSTGRES_PASSWORD: str = ""
-    POSTGRES_DB: str = "ibom_ai_agent_stack"
+    POSTGRES_DB: str = "postgres"
+    POSTGRES_SSLMODE: str = "require"
+    POSTGRES_ASYNCPG_SSL: str = "require"
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def DATABASE_URL(self) -> str:
         """Build async PostgreSQL connection URL."""
+        query = _db_query({"ssl": self.POSTGRES_ASYNCPG_SSL})
         return (
-            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            f"postgresql+asyncpg://{_quote_db_part(self.POSTGRES_USER)}:"
+            f"{_quote_db_part(self.POSTGRES_PASSWORD)}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}{query}"
         )
 
     @computed_field  # type: ignore[prop-decorator]
     @property
     def DATABASE_URL_SYNC(self) -> str:
         """Build sync PostgreSQL connection URL (for Alembic)."""
+        query = _db_query({"sslmode": self.POSTGRES_SSLMODE})
         return (
-            f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            f"postgresql://{_quote_db_part(self.POSTGRES_USER)}:"
+            f"{_quote_db_part(self.POSTGRES_PASSWORD)}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}{query}"
         )
 
     DB_POOL_SIZE: int = 5
@@ -99,6 +129,11 @@ class Settings(BaseSettings):
     # Stripe checkout/portal return URLs. Always declared (not gated) because
     # the billing model_validator references it unconditionally.
     FRONTEND_URL: str = "http://localhost:3000"
+    GOOGLE_OAUTH_CLIENT_ID: str = ""
+    GOOGLE_OAUTH_CLIENT_SECRET: str = ""
+    GOOGLE_OAUTH_REDIRECT_URI: str = "http://localhost:3000/auth/callback"
+    SUPABASE_URL: str = ""
+    SUPABASE_ANON_KEY: str = ""
 
     API_KEY: str = "change-me-in-production"
     API_KEY_HEADER: str = "X-API-Key"
@@ -136,7 +171,28 @@ class Settings(BaseSettings):
     S3_SECRET_KEY: str = ""
     S3_BUCKET: str = "ibom_ai_agent_stack"
     S3_REGION: str = "us-east-1"
+    ANTHROPIC_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
     GOOGLE_API_KEY: str = ""
+    CHAT_PROVIDER: str = "gemini"
+    CHAT_MODEL: str = "gemini-2.5-flash"
+    CHAT_ENABLED_PROVIDERS: list[str] = ["gemini"]
+    CHAT_ANTHROPIC_MODELS: list[str] = [
+        "claude-sonnet-4-5",
+        "claude-opus-4-1",
+        "claude-haiku-4-5",
+    ]
+    CHAT_OPENAI_MODELS: list[str] = [
+        "gpt-5.4-mini",
+        "gpt-5.4",
+        "gpt-4.1-mini",
+    ]
+    CHAT_GEMINI_MODELS: list[str] = [
+        "gemini-2.5-flash",
+        "gemini-2.5-pro",
+        "gemini-2.0-flash",
+    ]
+    # Legacy aliases kept for existing callers and persisted conversations.
     AI_MODEL: str = "gemini-2.5-flash"
     AI_TEMPERATURE: float = 0.7
     AI_THINKING_ENABLED: bool = False
@@ -147,7 +203,7 @@ class Settings(BaseSettings):
         "gemini-2.0-flash",
     ]
     AI_FRAMEWORK: str = "pydantic_ai"
-    LLM_PROVIDER: str = "google"
+    LLM_PROVIDER: str = "gemini"
 
     TAVILY_API_KEY: str = ""
 
@@ -155,6 +211,7 @@ class Settings(BaseSettings):
     DEEP_RESEARCH_MAX_TOKENS: int = 120_000
     DEEP_RESEARCH_COMPRESS_THRESHOLD: float = 0.8
     # Vector Database (pgvector) — uses existing PostgreSQL
+    EMBEDDING_PROVIDER: str = "gemini"
     EMBEDDING_MODEL: str = "gemini-embedding-exp-03-07"
 
     RAG_CHUNK_SIZE: int = 512
@@ -185,6 +242,27 @@ class Settings(BaseSettings):
             )
         return v
 
+    @field_validator(
+        "CHAT_ENABLED_PROVIDERS",
+        "CHAT_ANTHROPIC_MODELS",
+        "CHAT_OPENAI_MODELS",
+        "CHAT_GEMINI_MODELS",
+        "AI_AVAILABLE_MODELS",
+        mode="before",
+    )
+    @classmethod
+    def parse_list_settings(cls, v: object) -> object:
+        """Allow either JSON arrays or comma-separated strings in env files."""
+        return _parse_env_list(v)
+
+    @field_validator("CHAT_PROVIDER", "EMBEDDING_PROVIDER", "LLM_PROVIDER")
+    @classmethod
+    def normalize_provider_name(cls, v: str) -> str:
+        provider = (v or "").strip().lower()
+        if provider == "google":
+            return "gemini"
+        return provider
+
     @computed_field  # type: ignore[prop-decorator]
     @property
     def rag(self) -> "RAGSettings":
@@ -198,7 +276,10 @@ class Settings(BaseSettings):
             chunking_strategy=self.RAG_CHUNKING_STRATEGY,
             enable_hybrid_search=self.RAG_HYBRID_SEARCH,
             enable_ocr=self.RAG_ENABLE_OCR,
-            embeddings_config=EmbeddingsConfig(model=self.EMBEDDING_MODEL),
+            embeddings_config=EmbeddingsConfig(
+                provider=self.EMBEDDING_PROVIDER,
+                model=self.EMBEDDING_MODEL,
+            ),
             document_parser=DocumentParser(),
             pdf_parser=pdf_parser,
         )

@@ -119,6 +119,84 @@ class UserService:
         )
         return user
 
+    async def authenticate_google(
+        self,
+        *,
+        email: str,
+        google_sub: str,
+        email_verified: bool,
+        full_name: str | None = None,
+        avatar_url: str | None = None,
+    ) -> User:
+        """Create or link a user from a verified Google OAuth identity."""
+        if not email_verified:
+            raise AuthenticationError(message="Google account email is not verified")
+
+        normalized_email = email.lower()
+        user = await user_repo.get_by_google_sub(self.db, google_sub)
+        if user:
+            if not user.is_active:
+                raise AuthenticationError(message="User account is disabled")
+            return user
+
+        user = await user_repo.get_by_email(self.db, normalized_email)
+        if user:
+            if not user.is_active:
+                raise AuthenticationError(message="User account is disabled")
+            update_data: dict[str, str] = {"google_sub": google_sub}
+            if full_name and not user.full_name:
+                update_data["full_name"] = full_name
+            if avatar_url and not user.avatar_url:
+                update_data["avatar_url"] = avatar_url
+            return await user_repo.update(self.db, db_user=user, update_data=update_data)
+
+        is_first_user = await self._is_first_user()
+        return await user_repo.create(
+            self.db,
+            email=normalized_email,
+            hashed_password=None,
+            google_sub=google_sub,
+            full_name=full_name,
+            avatar_url=avatar_url,
+            role=UserRole.ADMIN.value if is_first_user else UserRole.USER.value,
+            is_app_admin=is_first_user,
+        )
+
+    async def authenticate_supabase_otp(
+        self,
+        *,
+        email: str,
+        supabase_auth_user_id: str,
+        full_name: str | None = None,
+    ) -> User:
+        """Create or link a user from a verified Supabase Auth OTP identity."""
+        normalized_email = email.lower()
+        user = await user_repo.get_by_supabase_auth_user_id(self.db, supabase_auth_user_id)
+        if user:
+            if not user.is_active:
+                raise AuthenticationError(message="User account is disabled")
+            return user
+
+        user = await user_repo.get_by_email(self.db, normalized_email)
+        if user:
+            if not user.is_active:
+                raise AuthenticationError(message="User account is disabled")
+            update_data: dict[str, str] = {"supabase_auth_user_id": supabase_auth_user_id}
+            if full_name and not user.full_name:
+                update_data["full_name"] = full_name
+            return await user_repo.update(self.db, db_user=user, update_data=update_data)
+
+        is_first_user = await self._is_first_user()
+        return await user_repo.create(
+            self.db,
+            email=normalized_email,
+            hashed_password=None,
+            supabase_auth_user_id=supabase_auth_user_id,
+            full_name=full_name,
+            role=UserRole.ADMIN.value if is_first_user else UserRole.USER.value,
+            is_app_admin=is_first_user,
+        )
+
     async def authenticate(self, email: str, password: str) -> User:
         user = await user_repo.get_by_email(self.db, email)
         if (

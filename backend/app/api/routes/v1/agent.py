@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.schemas.base import AgentModelsResponse
 from app.services.agent import AgentConnectionManager
 from app.services.agent_session import AgentSession
+from app.services.model_registry import chat_model_options, default_chat_model_ref
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +22,10 @@ manager = AgentConnectionManager()
 @router.get("/agent/models", response_model=AgentModelsResponse)
 async def list_models() -> dict[str, Any]:
     """Return available LLM models and the current default."""
+    default_ref = default_chat_model_ref(settings)
     return {
-        "default": settings.AI_MODEL,
-        "models": settings.AI_AVAILABLE_MODELS,
+        "default": default_ref.id,
+        "models": chat_model_options(settings),
     }
 
 

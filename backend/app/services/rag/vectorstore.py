@@ -208,7 +208,7 @@ class PgVectorStore(BaseVectorStore):
             result = await session.execute(
                 text(
                     "SELECT 1 FROM information_schema.tables "
-                    "WHERE table_name = :table AND table_schema = 'public'"
+                    "WHERE table_name = :table AND table_schema = current_schema()"
                 ),
                 {"table": table},
             )
@@ -328,7 +328,8 @@ class PgVectorStore(BaseVectorStore):
         async with self.async_session() as session:
             result = await session.execute(
                 text(
-                    "SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'rag_%' AND table_schema = 'public'"
+                    "SELECT table_name FROM information_schema.tables "
+                    "WHERE table_name LIKE 'rag_%' AND table_schema = current_schema()"
                 )
             )
             # removeprefix (Python 3.9+) strips only the leading "rag_" occurrence,

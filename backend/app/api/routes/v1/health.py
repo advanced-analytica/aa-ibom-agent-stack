@@ -119,12 +119,13 @@ async def readiness_probe(
     }
 
     # LLM provider — config-only check (avoid spending money on a probe call).
-    llm_provider = (getattr(settings, "LLM_PROVIDER", None) or "").lower()
+    llm_provider = (getattr(settings, "CHAT_PROVIDER", None) or getattr(settings, "LLM_PROVIDER", None) or "").lower()
     if llm_provider:
         key_field = {
             "openai": "OPENAI_API_KEY",
             "anthropic": "ANTHROPIC_API_KEY",
             "google": "GOOGLE_API_KEY",
+            "gemini": "GOOGLE_API_KEY",
             "openrouter": "OPENROUTER_API_KEY",
         }.get(llm_provider)
         api_key = getattr(settings, key_field, None) if key_field else None

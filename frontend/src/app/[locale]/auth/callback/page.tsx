@@ -14,8 +14,8 @@ export default function AuthCallbackPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const accessToken = searchParams.get("access_token");
-    const refreshToken = searchParams.get("refresh_token");
+    const code = searchParams.get("code");
+    const state = searchParams.get("state");
     const errParam = searchParams.get("error");
 
     if (errParam) {
@@ -26,8 +26,8 @@ export default function AuthCallbackPage() {
       );
       return () => clearTimeout(t);
     }
-    if (!accessToken || !refreshToken) {
-      router.replace("/login?error=missing_tokens");
+    if (!code || !state) {
+      router.replace("/login?error=missing_oauth_code");
       return;
     }
 
@@ -36,7 +36,11 @@ export default function AuthCallbackPage() {
       try {
         const data = await apiClient.post<{ user: User; access_token: string }>(
           "/auth/oauth-callback",
-          { access_token: accessToken, refresh_token: refreshToken },
+          {
+            code,
+            state,
+            redirect_uri: `${window.location.origin}/auth/callback`,
+          },
         );
         if (cancelled) return;
         useAuthStore.getState().setUser(data.user);
